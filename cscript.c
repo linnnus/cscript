@@ -19,8 +19,7 @@
 // returns index of first executable in argc or -1 on failure
 int find_executable(int argc, char **argv)
 {
-	for (int i = 0; i < argc; ++i)
-	{
+	for (int i = 0; i < argc; ++i) {
 		int fd = open(argv[i], O_RDONLY);
 		if (fd < 0)
 			continue;
@@ -41,32 +40,35 @@ int find_executable(int argc, char **argv)
 		close(fd);
 	}
 
-	errno = 0;
+	errno = 0; // reset after failed attempts to open
 	return -1;
 }
 
-// stolen from DOOM engine
+// C equivalent to `mkdir -p`; stolen from DOOM engine
 int mkdirp(const char *path, mode_t mode)
 {
 	char *pathname = NULL;
 	char *parent = NULL;
 
-	if (NULL == path) return -1;
+	if (NULL == path)
+		return -1;
 
 	pathname = strdup(path);
-	if (NULL == pathname) goto fail;
+	if (NULL == pathname)
+		goto fail;
 
 	parent = strdup(pathname);
-	if (NULL == parent) goto fail;
+	if (NULL == parent)
+		goto fail;
 
 	char *p = parent + strlen(parent);
-	while ('/' != *p && p != parent) {
+	while ('/' != *p && p != parent)
 		p--;
-	}
 	*p = '\0';
 
 	// make parent dir
-	if (p != parent && 0 != mkdirp(parent, mode)) goto fail;
+	if (p != parent && 0 != mkdirp(parent, mode))
+		goto fail;
 	free(parent);
 
 	// make this one if parent has been made
@@ -74,7 +76,7 @@ int mkdirp(const char *path, mode_t mode)
 
 	free(pathname);
 
-	return 0 == rc || EEXIST == errno
+	return (rc == 0 || errno == EEXIST)
 		? 0
 		: -1;
 
