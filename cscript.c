@@ -102,7 +102,7 @@ char *get_executable_cache_path(const char *source_path)
 	// get source file
 	char *abs_source_path = realpath(source_path, NULL);
 	if (!abs_source_path)
-		err(EX_OSERR, "cannot get real path of source file");
+		err(EX_OSERR, "cannot get real path of source file: realpath");
 
 	for (char *s = abs_source_path; *s; ++s)
 		if (*s == '/')
@@ -114,11 +114,11 @@ char *get_executable_cache_path(const char *source_path)
 
 	// ensure exists
 	if (mkdirp(cache_dir, 0777) < 0)
-		err(EX_OSERR, "failed to create cache directory (%s)", cache_dir);
+		err(EX_OSERR, "failed to create cache directory (%s): mkdirp", cache_dir);
 
 	char *dup = strdup(cache_path);
 	if (!dup)
-		err(EX_SOFTWARE, "failed to duplicate cache path (not enough memory)");
+		err(EX_SOFTWARE, "failed to duplicate cache path: strdup");
 
 	return dup;
 }
@@ -148,14 +148,14 @@ void compile_executable(char *cache_path, char *source_path, char **flags, int n
 	// create pipe for communincation with child
 	int pdes[2]; // read, write
 	if (pipe(pdes) < 0)
-		err(EX_OSERR, "failed to create pipe for compilation process");
+		err(EX_OSERR, "failed to create pipe for compilation process: pipe");
 
 	pid_t child_pid = fork();
 	if (child_pid < 0) {         // error (parent)
-		err(EX_OSERR, "failed to fork compilation process");
+		err(EX_OSERR, "failed to fork compilation process: fork");
 	} else if (child_pid == 0) { // child
 		if (dup2(pdes[0], STDIN_FILENO) < 0)
-			err(EX_OSERR, "failed to duplicate pipe for compilation process");
+			err(EX_OSERR, "failed to duplicate pipe for compilation process: dup2");
 		close(pdes[1]);
 
 		execvp(args[0], args);
@@ -166,10 +166,10 @@ void compile_executable(char *cache_path, char *source_path, char **flags, int n
 
 		FILE *compilation = fdopen(pdes[1], "w");
 		if (!compilation)
-			err(EX_OSERR, "failed to fopen write-end of pipe for compilation process");
+			err(EX_OSERR, "failed to open write-end of pipe for compilation process: fopen");
 		FILE *source = fopen(source_path, "r");
 		if (!source)
-			err(EX_OSERR, "failed to open source file");
+			err(EX_OSERR, "failed to open source file: fopen");
 
 		// copy all lines but the first from source file to child process's stdin
 		char buf[1024];
@@ -200,7 +200,7 @@ int main(int argc, char **argv)
 {
 	int i = find_executable(argc, argv);
 	if (i < 0)
-		errx(EX_DATAERR, "cannot find executable file in arguments");
+		errx(EX_USAGE, "cannot find executable file in arguments");
 
 	char *executable_path = get_executable_cache_path(argv[i]);
 	compile_executable(executable_path, argv[i], argv + 1, i - 1);
