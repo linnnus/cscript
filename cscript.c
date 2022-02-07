@@ -135,15 +135,15 @@ void compile_executable(char *cache_path, char *source_path, char **flags, int n
 
 	// construct argument list from flags and stuff
 	// don't look - this isn't pretty
-	char *args[nflags+5];
+	char *args[7+nflags];
 	args[0] = "cc";
 	args[1] = "-o";
 	args[2] = cache_path;
 	args[3] = "-x";
 	args[4] = "c";
 	memcpy(&args[5], flags, nflags * sizeof(char *));
-	args[nflags+5] = "-";
-	args[nflags+6] = NULL;
+	args[5+nflags] = "-";
+	args[6+nflags] = NULL;
 
 	// create pipe for communincation with child
 	int pdes[2]; // read, write
@@ -187,7 +187,7 @@ void compile_executable(char *cache_path, char *source_path, char **flags, int n
 noreturn void run_executable(char *name, char **flags, int nflags)
 {
 	// assemble args for final executable
-	char *args[nflags + 1];
+	char *args[1+nflags];
 	memcpy(&args[0], flags, nflags * sizeof(char *));
 	args[0+nflags] = NULL;
 
