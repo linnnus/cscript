@@ -13,12 +13,11 @@
 #include <sysexits.h>
 #include <unistd.h>
 
-// TODO: could we get this dynamically based on argv[0]?
-#define NAME "cscript"
-
 // returns index of first executable in argc or -1 on failure
 int find_executable(int argc, char **argv)
 {
+	const char *name = basename((char *) getprogname());
+
 	for (int i = 0; i < argc; ++i) {
 		int fd = open(argv[i], O_RDONLY);
 		if (fd < 0)
@@ -31,7 +30,7 @@ int find_executable(int argc, char **argv)
 			continue;
 		}
 
-		if (strstr(line, NAME) != NULL) {
+		if (strstr(line, name) != NULL) {
 			close(fd);
 			errno = 0; // reset after failed attempts to open
 			return i;
@@ -108,8 +107,9 @@ char *get_executable_cache_path(const char *source_path)
 			*s = '%';
 
 	// construct path
+	const char *name = basename((char *) getprogname());
 	if (snprintf(cache_path, sizeof(cache_path), "%s/%s/%s", cache_dir,
-				NAME, abs_source_path) >= sizeof(cache_path))
+				name, abs_source_path) >= sizeof(cache_path))
 		err(EX_SOFTWARE, "final path to cached executable too long");
 
 	char *dup = strdup(cache_path);
