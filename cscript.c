@@ -88,35 +88,29 @@ fail:
 
 char *get_executable_cache_path(const char *source_path)
 {
-	char cache_path[PATH_MAX];
+	char cache_path[PATH_MAX] = { };
 
 	// get cache directory
 	char *cache_dir = getenv("XDG_CACHE_HOME");
 	if (!cache_dir)
 		cache_dir = "/tmp";
 
-	if (strlcpy(cache_path, cache_dir, sizeof(cache_path)) >= sizeof(cache_path))
-		err(EX_SOFTWARE, "failed to construct cache-path");
-
-	if (strlcat(cache_path, "/"NAME"/", sizeof(cache_path)) >= sizeof(cache_path))
-		err(EX_SOFTWARE, "failed to construct cache-path");
+	// ensure exists
+	if (mkdirp(cache_dir, 0777) < 0)
+		err(EX_OSERR, "failed to create cache directory (%s): mkdirp", cache_dir);
 
 	// get source file
 	char *abs_source_path = realpath(source_path, NULL);
 	if (!abs_source_path)
 		err(EX_OSERR, "cannot get real path of source file: realpath");
-
 	for (char *s = abs_source_path; *s; ++s)
 		if (*s == '/')
 			*s = '%';
 
-	if (strlcat(cache_path, abs_source_path, sizeof(cache_path)) >= sizeof(cache_path))
-		err(EX_SOFTWARE, "failed to construct cache-path");
-
-
-	// ensure exists
-	if (mkdirp(cache_dir, 0777) < 0)
-		err(EX_OSERR, "failed to create cache directory (%s): mkdirp", cache_dir);
+	// construct path
+	if (snprintf(cache_path, sizeof(cache_path), "%s/%s/%s", cache_dir,
+				NAME, abs_source_path) >= sizeof(cache_path))
+		err(EX_SOFTWARE, "final path to cached executable too long");
 
 	char *dup = strdup(cache_path);
 	if (!dup)
@@ -125,7 +119,6 @@ char *get_executable_cache_path(const char *source_path)
 	return dup;
 }
 
-// returns name of compiled executable or NULL on failure
 void compile_executable(char *cache_path, char *source_path, char **flags, int nflags)
 {
 	// ensure compilation is needed
@@ -197,7 +190,7 @@ noreturn void run_executable(char *name, char **flags, int nflags)
 	memcpy(&args[0], flags, nflags * sizeof(char *));
 	args[0+nflags] = NULL;
 
-	// NOTE: the program is invoked with argv[0] == name
+	// NOTE: program is invoked with argv[0] == name, NOT the actual name
 	execvp(name, args);
 	err(EX_OSERR, "failed to exec() final executable (%s)", name);
 }
