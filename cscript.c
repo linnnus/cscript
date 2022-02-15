@@ -134,11 +134,12 @@ void compile_executable(char *cache_path, char *source_path, char **flags, int n
 	args[0] = "cc";
 	args[1] = "-o";
 	args[2] = cache_path;
-	args[3] = "-x";
-	args[4] = "c";
-	memcpy(&args[5], flags, nflags * sizeof(char *));
-	args[5+nflags] = "-";
-	args[6+nflags] = NULL;
+	args[3] = "-D__CSCRIPT__";
+	args[4] = "-x";
+	args[5] = "c";
+	memcpy(&args[6], flags, nflags * sizeof(char *));
+	args[6+nflags] = "-";
+	args[7+nflags] = NULL;
 
 	// create pipe for communincation with child
 	int pdes[2]; // read, write
