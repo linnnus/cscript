@@ -181,7 +181,11 @@ void compile_executable(char *cache_path, char *source_path, char **flags, int n
 		fclose(compilation);
 		fclose(source);
 
-		wait(NULL);
+		// wait for child to exit and review exit code
+		int stat_loc;
+		wait(&stat_loc);
+		if (!WIFEXITED(stat_loc) || WEXITSTATUS(stat_loc) != EXIT_SUCCESS)
+			errx(EX_SOFTWARE, "compilation failed. see output above.");
 	}
 }
 
