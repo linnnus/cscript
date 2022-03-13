@@ -10,13 +10,34 @@
 #include <stdnoreturn.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include <sysexits.h>
 #include <unistd.h>
+
+#ifdef __APPLE__
+#define st_mtime st_mtimespec.tv_sec
+#endif
+
+// returns invocation name
+// NOTE: this should be something with cscript, NOT the name of
+//       the file being executable
+const char *get_name()
+{
+#if defined(__APPLE__) || defined(BSD)
+	// FIXME: we shouldn't modify this
+	return basename((char *)getprogname());
+#elif defined(__linux__)
+	extern char *program_invocation_short_name;
+	return program_invocation_short_name;
+#else
+#error Unknown OS. Please extend the function get_name().
+#endif
+}
 
 // returns index of first executable in argc or -1 on failure
 int find_executable(int argc, char **argv)
 {
-	const char *name = basename((char *) getprogname());
+	const char *name = get_name();
 
 	for (int i = 0; i < argc; ++i) {
 		int fd = open(argv[i], O_RDONLY);
@@ -107,9 +128,8 @@ char *get_executable_cache_path(const char *source_path)
 			*s = '%';
 
 	// construct path
-	const char *name = basename((char *) getprogname());
 	if (snprintf(cache_path, sizeof(cache_path), "%s/%s/%s", cache_dir,
-				name, abs_source_path) >= sizeof(cache_path))
+				get_name(), abs_source_path) >= sizeof(cache_path))
 		err(EX_SOFTWARE, "final path to cached executable too long");
 
 	char *dup = strdup(cache_path);
@@ -125,7 +145,7 @@ void compile_executable(char *cache_path, char *source_path, char **flags, int n
 	struct stat source_stat;
 	struct stat cache_stat;
 	if (stat(source_path, &source_stat) >= 0 && stat(cache_path, &cache_stat) >= 0)
-		if (source_stat.st_mtimespec.tv_sec < cache_stat.st_mtimespec.tv_sec)
+		if (source_stat.st_mtime < cache_stat.st_mtime)
 			return;
 
 	// construct argument list from flags and stuff
