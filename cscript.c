@@ -19,27 +19,14 @@
 #define st_mtime st_mtimespec.tv_sec
 #endif
 
-// returns invocation name
-// NOTE: this should be something with cscript, NOT the name of
-//       the file being executable
-const char *get_name()
-{
-#if defined(__APPLE__) || defined(BSD)
-	// FIXME: we shouldn't modify this
-	return basename((char *)getprogname());
-#elif defined(__linux__)
-	extern char *program_invocation_short_name;
-	return program_invocation_short_name;
-#else
-#error Unknown OS. Please extend the function get_name().
+#ifndef NAME
+#warning NAME was not defined. NAME should be defined on the commandline or by the makefile. Defaulting to "cscript".
+#define NAME "cscript"
 #endif
-}
 
 // returns index of first executable in argc or -1 on failure
 int find_executable(int argc, char **argv)
 {
-	const char *name = get_name();
-
 	for (int i = 0; i < argc; ++i) {
 		int fd = open(argv[i], O_RDONLY);
 		if (fd < 0)
@@ -52,7 +39,7 @@ int find_executable(int argc, char **argv)
 			continue;
 		}
 
-		if (strstr(line, name) != NULL) {
+		if (strstr(line, NAME) != NULL) {
 			close(fd);
 			errno = 0; // reset after failed attempts to open
 			return i;
@@ -130,7 +117,7 @@ char *get_executable_cache_path(const char *source_path)
 
 	// construct path
 	if (snprintf(cache_path, sizeof(cache_path), "%s/%s/%s", cache_dir,
-				get_name(), abs_source_path) >= sizeof(cache_path))
+				NAME, abs_source_path) >= sizeof(cache_path))
 		err(EX_SOFTWARE, "final path to cached executable too long");
 
 	// technically a leak but it doesn't matter since it's one time and
@@ -217,15 +204,24 @@ noreturn void run_executable(char *name, char **flags, int nflags)
 	args[0+nflags] = NULL;
 
 	// NOTE: program is invoked with argv[0] == name, NOT the actual name
+	//       of the executable. For example: argv[0]==./my_script rather
+	//       than argv[0]==~/.cache/cscript/%path%to%my_script
+	//       Use argv[0] instead of name if you want the other behavior
 	execvp(name, args);
 	err(EX_OSERR, "failed to exec() final executable (%s)", name);
 }
 
 int main(int argc, char **argv)
 {
+#ifndef NDEBUG
+	const char *invocation_name = basename(argv[0]);
+	if (strstr(invocation_name, NAME) == NULL)
+		errx(EX_CONFIG, "invocation name (%s) does not contain `%s'. Note that you cannot rename the executable after it has been compiled; you must recompile it with a different name (see Makefile).", invocation_name, NAME);
+#endif
+
 	int i = find_executable(argc, argv);
 	if (i < 0)
-		errx(EX_USAGE, "cannot find executable file in arguments");
+		errx(EX_USAGE, "cannot find executable file with %s shebang in arguments", NAME);
 
 	char *executable_path = get_executable_cache_path(argv[i]);
 	compile_executable(executable_path, argv[i], argv + 1, i - 1);

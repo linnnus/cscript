@@ -1,6 +1,7 @@
 ### CONFIG ###
 
 INSTALL:=/usr/local/bin
+NAME:=cscript
 
 # reduce output
 MAKEFLAGS:=--silent
@@ -12,18 +13,19 @@ MAKEFLAGS:=--silent
 test: example.c
 	./example.c 1 2 3
 
-install: cscript
-	mv cscript $(INSTALL)/cscript
+install: $(NAME)
+	mv $(NAME) $(INSTALL)/$/NAME)
 
 uninstall:
-	$(RM) $(INSTALL)/cscript
+	$(RM) $(INSTALL)/$(NAME)
 
 clean:
-	$(RM) cscript
+	@echo "you may also want to run \`make uninstall'"
+	$(RM) $(NAME)
 
 ### RULES ###
 
-cscript: cscript.c
-	$(CC) -o $@ $<
+$(NAME): cscript.c
+	$(CC) -DNAME='"$(NAME)"' -o $@ $<
 
 example.c: cscript
