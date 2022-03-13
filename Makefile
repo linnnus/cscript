@@ -14,7 +14,7 @@ test: example.c
 	./example.c 1 2 3
 
 install: $(NAME)
-	mv $(NAME) $(INSTALL)/$/NAME)
+	mv $(NAME) $(INSTALL)/$(NAME)
 
 uninstall:
 	$(RM) $(INSTALL)/$(NAME)
