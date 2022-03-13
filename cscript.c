@@ -1,4 +1,5 @@
 #define _POSIX_C_SOURCE_1
+
 #include <err.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -132,6 +133,8 @@ char *get_executable_cache_path(const char *source_path)
 				get_name(), abs_source_path) >= sizeof(cache_path))
 		err(EX_SOFTWARE, "final path to cached executable too long");
 
+	// technically a leak but it doesn't matter since it's one time and
+	// we're exec()ing another process anyways
 	char *dup = strdup(cache_path);
 	if (!dup)
 		err(EX_SOFTWARE, "failed to duplicate cache path: strdup");
@@ -150,7 +153,7 @@ void compile_executable(char *cache_path, char *source_path, char **flags, int n
 
 	// construct argument list from flags and stuff
 	// don't look - this isn't pretty
-	char *args[7+nflags];
+	char *args[8+nflags];
 	args[0] = "cc";
 	args[1] = "-o";
 	args[2] = cache_path;
@@ -188,6 +191,8 @@ void compile_executable(char *cache_path, char *source_path, char **flags, int n
 			err(EX_OSERR, "failed to open source file: fopen");
 
 		// copy all lines but the first from source file to child process's stdin
+		// FIXME: this makes __FILE__ = "<stdin>" which makes a lot of
+		// macros and compiler messages act weird
 		char buf[1024];
 		for (bool first_line = true; fgets(buf, sizeof(buf), source); first_line = false)
 			if (!first_line)
