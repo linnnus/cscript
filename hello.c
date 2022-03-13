@@ -1,4 +1,4 @@
-#!/usr/local/bin/cscript
+#!/usr/bin/env cscript
 
 // This file uses the absolute path to cscript. Run this after installation.
 
