@@ -1,5 +1,7 @@
 #!./cscript -std=c11 -lm
 
+// This file uses the local version of cscript. Must be run from project root.
+
 #include <stdio.h>
 #include <stdlib.h>
 

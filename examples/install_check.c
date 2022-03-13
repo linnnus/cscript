@@ -7,7 +7,7 @@
 
 int main()
 {
-	puts("Hello, World!");
+	puts("The interpreter is installed!");
 
 	return EXIT_SUCCESS;
 }
