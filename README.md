@@ -11,7 +11,7 @@ Assuming you have cscript installed (use `make install`), create the file
 `hello` containing:
 
 ```c
-#!/usr/bin/env cscript -std=c11 -lm
+#!/usr/bin/env -S cscript -std=c11 -lm
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -39,7 +39,7 @@ It is possible to compile any other languages that your C compiler
 (specifically `/bin/cc`) supports. The following shebang works for C++ files:
 
 ```cpp
-#!/usr/bin/env cscript -x c++
+#!/usr/bin/env -S cscript -x c++
 
 #include <iostream>
 
