@@ -57,6 +57,10 @@ shebang line overwrites the `-x c` inserted by cscript, and the file is
 compiled as a C++ source file. You could event do this for Fortan you are using
 GCC.
 
+Note the `-S` switch. It instructs `env` to split the arguments into seperate
+strings. This is important as some operating systems deliver all the shebang
+arguments as a single argument.
+
 ## Don't use this
 
 If you actually want to use this, a (slightly) more portable version would look
