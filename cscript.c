@@ -15,10 +15,6 @@
 #include <sysexits.h>
 #include <unistd.h>
 
-#ifdef __APPLE__
-#define st_mtime st_mtimespec.tv_sec
-#endif
-
 #ifndef NAME
 #warning NAME was not defined. NAME should be defined on the commandline or by the makefile. Defaulting to "cscript".
 #define NAME "cscript"
