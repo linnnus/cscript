@@ -1,4 +1,4 @@
-#!/usr/bin/env cscript
+#!/usr/bin/env -S cscript -std=c11 -Wall -Werror -Wextra
 
 // This file uses the absolute path to cscript. Run this after installation.
 
