@@ -1,26 +1,25 @@
 # config
 INSTALL:=/usr/local/bin
-NAME:=cscript
 
 # reduce output
 MAKEFLAGS:=--silent
 
 .PHONY: test install uninstall clean
 
-test: $(NAME)
+test: cscript
 	./examples/echo.c Hello, Worlscd
 	./examples/echo_args.c arg1 arg2 arg2
 	./examples/install_check.c
 
-install: $(NAME)
-	mv $(NAME) $(INSTALL)/$(NAME)
+install: cscript
+	mv cscript $(INSTALL)/cscript
 
 uninstall:
-	$(RM) $(INSTALL)/$(NAME)
+	$(RM) $(INSTALL)/cscript
 
+# NOTE: you may also want to run `make uninstall`
 clean:
-	@echo "you may also want to run \`make uninstall'"
-	$(RM) $(NAME)
+	$(RM) cscript
 
-$(NAME): cscript.c
-	$(CC) -DNAME='"$(NAME)"' -o $@ $<
+cscript: cscript.c
+	$(CC) -o $@ $<

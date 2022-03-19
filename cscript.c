@@ -15,14 +15,32 @@
 #include <sysexits.h>
 #include <unistd.h>
 
-#ifndef NAME
-#warning NAME was not defined. NAME should be defined on the commandline or by the makefile. Defaulting to "cscript".
-#define NAME "cscript"
+// returns the short name of the program.
+// e.g. if located at /usr/local/bin/cinterp, returns cinterp
+const char *get_program_name()
+{
+	static const char *result = NULL;
+	if (result)
+		return result;
+
+#if defined(__APPLE__) || defined(BSD)
+	extern const char *getprogname();
+	result = getprogname();
+#elif defined(__linux__)
+	extern const char *program_invocation_short_name;
+	result = program_invocation_short_name;
+#else
+#error Unknown target. Please update get_program_name() with your OS!
 #endif
+
+	return result;
+}
 
 // returns index of first executable in argc or -1 on failure
 int find_executable(int argc, char **argv)
 {
+	const char *name = get_program_name();
+
 	for (int i = 0; i < argc; ++i) {
 		int fd = open(argv[i], O_RDONLY);
 		if (fd < 0)
@@ -35,7 +53,7 @@ int find_executable(int argc, char **argv)
 			continue;
 		}
 
-		if (strstr(line, NAME) != NULL) {
+		if (strstr(line, name) != NULL) {
 			close(fd);
 			errno = 0; // reset after failed attempts to open
 			return i;
@@ -113,7 +131,7 @@ char *get_executable_cache_path(const char *source_path)
 
 	// construct path
 	if (snprintf(cache_path, sizeof(cache_path), "%s/%s/%s", cache_dir,
-				NAME, abs_source_path) >= sizeof(cache_path))
+				get_program_name(), abs_source_path) >= sizeof(cache_path))
 		err(EX_SOFTWARE, "final path to cached executable too long");
 
 	// technically a leak but it doesn't matter since it's one time and
@@ -209,15 +227,9 @@ noreturn void run_executable(char *name, char **flags, int nflags)
 
 int main(int argc, char **argv)
 {
-#ifndef NDEBUG
-	const char *invocation_name = basename(argv[0]);
-	if (strstr(invocation_name, NAME) == NULL)
-		errx(EX_CONFIG, "invocation name (%s) does not contain `%s'. Note that you cannot rename the executable after it has been compiled; you must recompile it with a different name (see Makefile).", invocation_name, NAME);
-#endif
-
 	int i = find_executable(argc, argv);
 	if (i < 0)
-		errx(EX_USAGE, "cannot find executable file with %s shebang in arguments", NAME);
+		errx(EX_USAGE, "cannot find executable file with %s shebang in arguments", get_program_name());
 
 	char *executable_path = get_executable_cache_path(argv[i]);
 	compile_executable(executable_path, argv[i], argv + 1, i - 1);
