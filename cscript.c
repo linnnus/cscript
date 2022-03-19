@@ -132,7 +132,7 @@ char *get_executable_path(const char *source_path)
 	// construct path
 	if (snprintf(cache_path, sizeof(cache_path), "%s/%s/%s", cache_dir,
 				get_program_name(), abs_source_path) >= sizeof(cache_path))
-		err(EX_SOFTWARE, "final path to cached executable too long");
+		err(EX_SOFTWARE, "final path to cached executable too long: snprintf");
 
 	// technically a leak but it doesn't matter since it's one time and
 	// we're exec()ing another process anyways
@@ -179,7 +179,7 @@ void compile_executable(char *out_path, char *source_path, char **flags, int nfl
 		close(pdes[1]);
 
 		execvp(args[0], args);
-		perror("child process failed to exec");
+		perror("forked compilation process failed to exec: execvp");
 		_exit(127);
 	} else {                     // parent
 		close(pdes[0]);
@@ -222,7 +222,7 @@ noreturn void run_executable(char *name, char **flags, int nflags)
 	//       than argv[0]==~/.cache/cscript/%path%to%my_script
 	//       Use argv[0] instead of name if you want the other behavior
 	execvp(name, args);
-	err(EX_OSERR, "failed to exec() final executable (%s)", name);
+	err(EX_OSERR, "failed to exec() final executable (%s): execvp", name);
 }
 
 int main(int argc, char **argv)
