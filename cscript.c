@@ -36,8 +36,8 @@ const char *get_program_name()
 	return result;
 }
 
-// returns index of first executable in argc or -1 on failure
-int find_executable(int argc, char **argv)
+// return index of source path or -1 on failure
+int find_source_path_idx(int argc, char **argv)
 {
 	const char *name = get_program_name();
 
@@ -108,7 +108,7 @@ fail:
 	return -1;
 }
 
-char *get_executable_cache_path(const char *source_path)
+char *get_executable_path(const char *source_path)
 {
 	char cache_path[PATH_MAX] = { };
 
@@ -143,12 +143,12 @@ char *get_executable_cache_path(const char *source_path)
 	return dup;
 }
 
-void compile_executable(char *cache_path, char *source_path, char **flags, int nflags)
+void compile_executable(char *out_path, char *source_path, char **flags, int nflags)
 {
 	// ensure compilation is needed
 	struct stat source_stat;
 	struct stat cache_stat;
-	if (stat(source_path, &source_stat) >= 0 && stat(cache_path, &cache_stat) >= 0)
+	if (stat(source_path, &source_stat) >= 0 && stat(out_path, &cache_stat) >= 0)
 		if (source_stat.st_mtime < cache_stat.st_mtime)
 			return;
 
@@ -157,7 +157,7 @@ void compile_executable(char *cache_path, char *source_path, char **flags, int n
 	char *args[8+nflags];
 	args[0] = "cc";
 	args[1] = "-o";
-	args[2] = cache_path;
+	args[2] = out_path;
 	args[3] = "-D__CSCRIPT__";
 	args[4] = "-x";
 	args[5] = "c";
@@ -227,11 +227,11 @@ noreturn void run_executable(char *name, char **flags, int nflags)
 
 int main(int argc, char **argv)
 {
-	int i = find_executable(argc, argv);
+	int i = find_source_path_idx(argc, argv);
 	if (i < 0)
 		errx(EX_USAGE, "cannot find executable file with %s shebang in arguments", get_program_name());
 
-	char *executable_path = get_executable_cache_path(argv[i]);
+	char *executable_path = get_executable_path(argv[i]);
 	compile_executable(executable_path, argv[i], argv + 1, i - 1);
 	run_executable(executable_path, argv + i, argc - i);
 }
