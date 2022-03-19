@@ -113,13 +113,9 @@ char *get_executable_path(const char *source_path)
 	char cache_path[PATH_MAX] = { };
 
 	// get cache directory
-	char *cache_dir = getenv("XDG_CACHE_HOME");
+	const char *cache_dir = getenv("XDG_CACHE_HOME");
 	if (!cache_dir)
 		cache_dir = "/tmp";
-
-	// ensure exists
-	if (mkdirp(cache_dir, 0777) < 0)
-		err(EX_OSERR, "failed to create cache directory (%s): mkdirp", cache_dir);
 
 	// get source file
 	char *abs_source_path = realpath(source_path, NULL);
@@ -133,6 +129,10 @@ char *get_executable_path(const char *source_path)
 	if (snprintf(cache_path, sizeof(cache_path), "%s/%s/%s", cache_dir,
 				get_program_name(), abs_source_path) >= sizeof(cache_path))
 		err(EX_SOFTWARE, "final path to cached executable too long: snprintf");
+
+	// ensure parent directory exists
+	if (mkdirp(dirname(cache_path), 0777) < 0)
+		err(EX_OSERR, "failed to create cache directory (%s): mkdirp", cache_dir);
 
 	// technically a leak but it doesn't matter since it's one time and
 	// we're exec()ing another process anyways
