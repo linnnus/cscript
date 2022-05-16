@@ -39,15 +39,16 @@ It is possible to compile any other languages that your C compiler
 (specifically `/bin/cc`) supports. The following shebang works for C++ files:
 
 ```cpp
-#!/usr/bin/env -S cscript -x c++
+#!/usr/bin/env -S cscript -xc++ -lc++
 
 #include <iostream>
+#include <cstdlib>
 
 int main()
 {
-	std::cout << "Hello World!" << std::endl;
+	std::cout << "This is C++!" << std::endl;
 
-	return 0;
+	return EXIT_SUCCESS;
 }
 ```
 
