@@ -90,3 +90,6 @@ cc -c x -o hello.exe hello
 # correct -- ignores #! with `tail`
 tail -n+2 hello | cc -x c -o hello.exe -
 ```
+
+Also see `examples/slightly_portable.c` for an example of how to use cscript in
+the same ways as the C example on this page.
