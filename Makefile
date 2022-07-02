@@ -1,10 +1,8 @@
 # config
 INSTALL:=/usr/local/bin
 
-# reduce output
-MAKEFLAGS:=--silent
-
 .PHONY: test install uninstall clean
+.DEFAULT_GOAL := cscript
 
 test: cscript
 	./examples/echo.c Hello, Worlscd
