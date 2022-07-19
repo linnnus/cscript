@@ -41,7 +41,8 @@ int find_source_path_idx(int argc, char **argv)
 {
 	const char *name = get_program_name();
 
-	for (int i = 0; i < argc; ++i) {
+	// try finding file argument with shebang
+	for (int i = 1; i < argc; ++i) {
 		int fd = open(argv[i], O_RDONLY);
 		if (fd < 0)
 			continue;
@@ -60,6 +61,13 @@ int find_source_path_idx(int argc, char **argv)
 		}
 
 		close(fd);
+	}
+
+	// try finding just a file
+	for (int i = 1; i < argc; ++i) {
+		if (access(argv[i], F_OK) == 0) {
+			return i;
+		}
 	}
 
 	errno = 0; // reset after failed attempts to open
@@ -191,13 +199,26 @@ void compile_executable(char *out_path, char *source_path, char **flags, int nfl
 		if (!source)
 			err(EX_OSERR, "failed to open source file: fopen");
 
+		errno = 0;
+
 		// copy all lines but the first from source file to child process's stdin
 		// FIXME: this makes __FILE__ = "<stdin>" which makes a lot of
 		// macros and compiler messages act weird
-		char buf[1024];
-		for (bool first_line = true; fgets(buf, sizeof(buf), source); first_line = false)
-			if (!first_line)
-				fwrite(buf, strlen(buf), 1, compilation);
+		char *line = NULL;
+		size_t linecap = 0;
+		ssize_t linelen;
+		bool first_line = true;
+		while ((linelen = getline(&line, &linecap, source)) > 0) {
+			if (first_line && linelen > 2 && line[0] == '#' && line[1] == '!')
+				continue;
+
+			if (fwrite(line, linelen, 1, compilation) < 1)
+				err(EX_OSERR, "failed to write to write-end of pipe for compilation process: fwrite");
+			first_line = false;
+		}
+		if (linelen == -1 && !feof(source))
+			err(EX_OSERR, "failed to read source file: getline");
+		free(line);
 		fclose(compilation);
 		fclose(source);
 
@@ -229,7 +250,7 @@ int main(int argc, char **argv)
 {
 	int i = find_source_path_idx(argc, argv);
 	if (i < 0)
-		errx(EX_USAGE, "cannot find executable file with %s shebang in arguments", get_program_name());
+		errx(EX_USAGE, "cannot find file to be executed in arguments");
 
 	char *executable_path = get_executable_path(argv[i]);
 	compile_executable(executable_path, argv[i], argv + 1, i - 1);
