@@ -230,20 +230,45 @@ void compile_executable(char *out_path, char *source_path, char **flags, int nfl
 	}
 }
 
-// exec(1)'s name with `flags`
-noreturn void run_executable(char *name, char **flags, int nflags)
+// exec(1)'s `name` with `flags`
+noreturn void run_executable(char *execuable_path, char **flags, int nflags, bool debug)
 {
 	// assemble args for final executable
-	char *args[1+nflags];
-	memcpy(&args[0], flags, nflags * sizeof(char *));
-	args[0+nflags] = NULL;
+	// if -g is specified, run under lldb
+	// FIXME: lldb doesn't load dSYM files. differing UUIDs??
+	char *executable;
+	char *args[nflags+7];
+	if (debug) {
+		executable = "lldb";
 
-	// NOTE: program is invoked with argv[0] == name, NOT the actual name
-	//       of the executable. For example: argv[0]==./my_script rather
-	//       than argv[0]==~/.cache/cscript/%path%to%my_script
-	//       Use argv[0] instead of name if you want the other behavior
-	execvp(name, args);
-	err(EX_OSERR, "failed to exec() final executable (%s): execvp", name);
+		args[0] = "lldb";
+		args[1] = "--batch";
+		args[2] = "--source-quietly";
+		args[3] = "--one-line";
+		args[4] = "run";
+		args[5] = execuable_path;
+		memcpy(&args[6], flags, nflags * sizeof(char *));
+		args[6+nflags] = NULL;
+	} else {
+		executable = execuable_path;
+
+		memcpy(&args[0], flags, nflags * sizeof(char *));
+		args[nflags] = NULL;
+	}
+
+	execvp(executable, args);
+	err(EX_OSERR, "failed to exec() final executable (%s): execvp", executable);
+}
+
+bool contains_dash_g(char *source_path, char **flags, int nflags)
+{
+	for (int i = 0; i < nflags; ++i) {
+		if (strncmp(flags[i], "-g", 2) == 0) {
+			return true;
+		}
+	}
+
+	return false;
 }
 
 int main(int argc, char **argv)
@@ -254,5 +279,6 @@ int main(int argc, char **argv)
 
 	char *executable_path = get_executable_path(argv[i]);
 	compile_executable(executable_path, argv[i], argv + 1, i - 1);
-	run_executable(executable_path, argv + i, argc - i);
+	bool want_debug = contains_dash_g(argv[i], argv + 1, i - 1);
+	run_executable(executable_path, argv + i, argc - i, want_debug);
 }
