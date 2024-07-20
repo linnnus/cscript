@@ -1,9 +1,9 @@
 # cscript
 
 `cscript.c` contains the source for a C "interpreter". Behind the scenes it
-actually compiles the file and runs it immediately, so it's not *really* an
-interpreter. Point is, it allows you to use a shebang (just like `#!/bin/sh`)
-to write C programs that execute like a Bash scripts.
+actually compiles the file and runs it immediately, so it's not _really_ an
+interpreter. Point is, it allows you to use a shebang (just like `#!/bin/sh`) to
+write C programs that execute like a Bash scripts.
 
 ## An example
 
@@ -35,8 +35,8 @@ chmod +x ./hello
 
 ## Not just C!
 
-It is possible to compile any other languages that your C compiler
-(specifically `/bin/cc`) supports. The following shebang works for C++ files:
+It is possible to compile any other languages that your C compiler (specifically
+`/bin/cc`) supports. The following shebang works for C++ files:
 
 ```cpp
 #!/usr/bin/env -S cscript -xc++ -lc++
@@ -52,11 +52,10 @@ int main()
 }
 ```
 
-Behind the scenes, cscript invokes `cc` with a couple of flags, including `-x c`,
-followed by the flags specified on the shebang line. The `-x c++` in the
-shebang line overwrites the `-x c` inserted by cscript, and the file is
-compiled as a C++ source file. You could event do this for Fortan you are using
-GCC.
+Behind the scenes, cscript invokes `cc` with a couple of flags, including
+`-x c`, followed by the flags specified on the shebang line. The `-x c++` in the
+shebang line overwrites the `-x c` inserted by cscript, and the file is compiled
+as a C++ source file. You could event do this for Fortan you are using GCC.
 
 Note the `-S` switch. It instructs `env` to split the arguments into seperate
 strings. This is important as some operating systems deliver all the shebang
