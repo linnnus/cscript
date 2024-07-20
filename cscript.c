@@ -199,8 +199,6 @@ void compile_executable(char *out_path, char *source_path, char **flags, int nfl
 		if (!source)
 			err(EX_OSERR, "failed to open source file: fopen");
 
-		errno = 0;
-
 		// copy all lines but the first from source file to child process's stdin
 		// FIXME: this makes __FILE__ = "<stdin>" which makes a lot of
 		// macros and compiler messages act weird
