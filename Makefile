@@ -1,11 +1,11 @@
 # config
-INSTALL:=/usr/local/bin
+INSTALL := /usr/local/bin
 
 .PHONY: test install uninstall clean
 .DEFAULT_GOAL := cscript
 
 test: cscript
-	./examples/echo.c Hello, Worlscd
+	./examples/echo.c Hello, World
 	./examples/echo_args.c arg1 arg2 arg2
 	./examples/install_check.c
 
@@ -15,9 +15,9 @@ install: cscript
 uninstall:
 	$(RM) $(INSTALL)/cscript
 
-# NOTE: you may also want to run `make uninstall`
 clean:
-	$(RM) cscript
+	@echo "NOTE: you may also want to run \`make uninstall\`"
+	$(RM) cscript cscript.dSYM
 
 cscript: cscript.c
-	$(CC) -o $@ $<
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $<
