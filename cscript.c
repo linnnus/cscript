@@ -26,11 +26,11 @@ const char *get_program_name()
 #if defined(__APPLE__) || defined(BSD)
 	extern const char *getprogname();
 	result = getprogname();
-#elif defined(__linux__)
+#elif defined(__GLIBC__)
 	extern const char *program_invocation_short_name;
 	result = program_invocation_short_name;
 #else
-#error Unknown target. Please update get_program_name() with your OS!
+#error Unknown target. Please update get_program_name() with your OS + libc version!
 #endif
 
 	return result;
