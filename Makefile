@@ -7,6 +7,8 @@ INSTALL := /usr/local/bin
 test: cscript
 	./examples/echo.c Hello, World
 	./examples/echo_args.c arg1 arg2 arg2
+
+installtest:
 	./examples/install_check.c
 
 install: cscript
