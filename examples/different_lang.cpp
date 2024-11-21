@@ -1,4 +1,4 @@
-#!/usr/bin/env -S cscript -xc++ -lc++
+#!./cscript -xc++ -lc++
 
 #include <iostream>
 #include <cstdlib>
