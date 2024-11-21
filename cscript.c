@@ -162,16 +162,20 @@ void compile_executable(char *out_path, char *source_path, char **flags, int nfl
 
 	// construct argument list from flags and stuff
 	// don't look - this isn't pretty
-	char *args[8+nflags];
-	args[0] = "cc";
-	args[1] = "-o";
-	args[2] = out_path;
-	args[3] = "-D__CSCRIPT__";
-	args[4] = "-x";
-	args[5] = "c";
-	memcpy(&args[6], flags, nflags * sizeof(char *));
-	args[6+nflags] = "-";
-	args[7+nflags] = NULL;
+	char *args[10 + nflags];
+	int i = 0;
+	args[i++] = "cc";
+	args[i++] = "-o";
+	args[i++] = out_path;
+        args[i++] = "-x"; // CC cannot guess language from extension when using stdin
+	args[i++] = "c";
+	args[i++] = "-D__CSCRIPT__"; // let applications know they're running under cscript
+	args[i++] = "-I"; // make relative includes work as if a filename (not -) had been passed
+	args[i++] = dirname(source_path);
+	memcpy(&args[i], flags, nflags * sizeof(char *)); // user's flags must be last to overwrite defaults!
+	i += nflags;
+	args[i++] = "-"; // use stdin as source. must be super last so user flags can contain -x!!
+	args[i] = NULL;
 
 	// create pipe for communincation with child
 	int pdes[2]; // read, write
