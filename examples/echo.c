@@ -1,4 +1,4 @@
-#!./cscript -std=c11 -lm
+#!./cscript -std=c11
 
 // This file uses the local version of cscript. Must be run from project root.
 

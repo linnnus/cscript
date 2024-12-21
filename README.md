@@ -93,3 +93,22 @@ tail -n+2 hello | cc -x c -o hello.exe -
 
 Also see `examples/slightly_portable.c` for an example of how to use cscript in
 the same ways as the C example on this page.
+
+## A note on shebang arguments
+
+There's a pretty important difference between how the remainder of the shebang
+line after the interpreter is handled. Linux passes everything after the
+interpreter as a single argument, while Darwin splits the remaining arguments
+like the shell does.
+
+So something like the following invocation likely won't work across different
+UNIX-like operations systems. See [the Portability section of the Wikipedia
+article](shebangport) for more information.
+
+```
+#!cscript -std=c11 -Wall -Wextra
+```
+
+You can use `/usr/bin/env` with the `-S` flag to work around this issue.
+
+[shebangport]: https://en.wikipedia.org/wiki/Shebang_(Unix)#Portability
