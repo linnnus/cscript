@@ -36,6 +36,17 @@ const char *get_program_name()
 	return result;
 }
 
+// Variant of dirname(3) which is guaranteed to never modify arguments.
+// This guarantee is not made by POSIX.
+char *xdirname(const char *path)
+{
+	char *dup = strdup(path);
+	if (!dup)
+		err(EX_SOFTWARE, "failed to duplicate path: strdup");
+
+	return dirname(dup);
+}
+
 // return index of source path or -1 on failure
 int find_source_path_idx(int argc, char **argv)
 {
@@ -138,9 +149,12 @@ char *get_executable_path(const char *source_path)
 				get_program_name(), abs_source_path) >= sizeof(cache_path))
 		err(EX_SOFTWARE, "final path to cached executable too long: snprintf");
 
+
 	// ensure parent directory exists
-	if (mkdirp(dirname(cache_path), 0777) < 0)
+	char *dirname = xdirname(cache_path);
+	if (mkdirp(dirname, 0777) < 0)
 		err(EX_OSERR, "failed to create cache directory (%s): mkdirp", cache_dir);
+	free(dirname);
 
 	// technically a leak but it doesn't matter since it's one time and
 	// we're exec()ing another process anyways
@@ -171,7 +185,7 @@ void compile_executable(char *out_path, char *source_path, char **flags, int nfl
 	args[i++] = "c";
 	args[i++] = "-D__CSCRIPT__"; // let applications know they're running under cscript
 	args[i++] = "-I"; // make relative includes work as if a filename (not -) had been passed
-	args[i++] = dirname(source_path);
+	args[i++] = xdirname(source_path);
 	memcpy(&args[i], flags, nflags * sizeof(char *)); // user's flags must be last to overwrite defaults!
 	i += nflags;
 	args[i++] = "-"; // use stdin as source. must be super last so user flags can contain -x!!
@@ -219,7 +233,7 @@ void compile_executable(char *out_path, char *source_path, char **flags, int nfl
 			first_line = false;
 		}
 		if (linelen == -1 && !feof(source))
-			err(EX_OSERR, "failed to read source file: getline");
+			err(EX_OSERR, "failed to read source file (%s): getline", source_path);
 		free(line);
 		fclose(compilation);
 		fclose(source);
